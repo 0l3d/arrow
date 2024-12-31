@@ -1,0 +1,31 @@
+ #bin/bash
+
+if [ "$1" = "install" ]; then
+   path_of_arwbuild="$(find ~/.arrow/repos -type d -name '*txt*')"
+   source $path_of_arwbuild/ARWBUILD
+   echo "Package Name : $pkgname"
+   echo "Package Version : $pkgver"
+   echo "Package Size : null"
+   echo "Arrow ready for installation."
+   echo -n "Are you sure ? [Y\n] : "
+   read are_you_sure
+
+   if [ "$are_you_sure" = "Y" ] || [ "$are_you_sure" = "y" ] || [ "$are_you_sure" = "yes" ]; then
+     echo "LETS DO IT!"
+     if [ "$pkgout" = "single" ]; then
+        curl $source -o ~/.arrow/source/$pkgname
+        echo "Installing..."
+        mv ~/.arrow/source/$pkgname ~/.arrow/bin/$pkgname
+
+     fi
+     echo -ne '\n'
+     echo "Installation finished."
+   fi
+fi
+
+if [ "$1" = "add" ]; then
+   echo "Searching $2 with $3 name repo..."
+   mkdir ~/.arrow/repos/$3 &> /dev/null
+   git clone $2 ~/.arrow/repos/$3 &> /dev/null
+   echo "Finished repo add."
+fi
