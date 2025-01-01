@@ -12,7 +12,9 @@ if [ "$1" = "install" ]; then
 
    if [ "$are_you_sure" = "Y" ] || [ "$are_you_sure" = "y" ] || [ "$are_you_sure" = "yes" ]; then
      echo "LETS DO IT!"
-     curl $source -o ~/.arrow/source/$pkgname
+
+     curl $source -o ~/.arrow/source/$(basename "$source")
+
      if type prepare >/dev/null 2>&1 ; then prepare ; fi
      if type build >/dev/null 2>&1 ; then build ; fi
      if type package >/dev/null 2>&1 ; then package ; fi
@@ -24,9 +26,21 @@ if [ "$1" = "install" ]; then
    fi
 fi
 
-if [ "$1" = "add" ]; then
+if [ "$1" = "remove" ]; then
+  find "source" -type f -name "$2-*.*" -exec rm -r {} + &> /dev/null
+  find "packages" -type d -name "$2-*.*" -exec rm -r {} + &> /dev/null
+  find "bin" -type f -name "$2-*.*" -exec rm -r {} + &> /dev/null
+  echo "Removed the package : $2"
+fi
+
+if [ "$1" = "addrepo" ]; then
    echo "Searching $2 with $3 name repo..."
    mkdir ~/.arrow/repos/$3 &> /dev/null
    git clone $2 ~/.arrow/repos/$3 &> /dev/null
    echo "Finished repo add."
+fi
+
+if [ "$1" = "rmrepo" ]; then
+ find ~/.arrow/repos/ -type d -name "$2" -exec rm -rf {} +
+ echo "Removed repo."
 fi
