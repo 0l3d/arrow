@@ -5,21 +5,22 @@ if [ "$1" = "install" ]; then
    source $path_of_arwbuild/ARWBUILD
    echo "Package Name : $pkgname"
    echo "Package Version : $pkgver"
-   echo "Package Size : null"
+   echo "Package Size : $(curl -s -L -I $source | gawk -v IGNORECASE=1 '/^Content-Length/ { printf "%.2f MB\n", $2/1024/1024 }')"
    echo "Arrow ready for installation."
    echo -n "Are you sure ? [Y\n] : "
    read are_you_sure
 
    if [ "$are_you_sure" = "Y" ] || [ "$are_you_sure" = "y" ] || [ "$are_you_sure" = "yes" ]; then
      echo "LETS DO IT!"
-     if [ "$pkgout" = "single" ]; then
-        curl $source -o ~/.arrow/source/$pkgname
-        echo "Installing..."
-        mv ~/.arrow/source/$pkgname ~/.arrow/bin/$pkgname
-
-     fi
+     curl $source -o ~/.arrow/source/$pkgname
+     if type prepare >/dev/null 2>&1 ; then prepare ; fi
+     if type build >/dev/null 2>&1 ; then build ; fi
+     if type package >/dev/null 2>&1 ; then package ; fi
+     if type check >/dev/null 2>&1 ; then check ; fi
      echo -ne '\n'
      echo "Installation finished."
+   else
+     echo "OK!"
    fi
 fi
 
