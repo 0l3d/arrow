@@ -1,46 +1,62 @@
 #!/usr/bin/env bash
 
-if [ "$1" = "install" ]; then
-   path_of_arwbuild="$(find ~/.arrow/repos -type d -name '*txt*')"
-   source $path_of_arwbuild/ARWBUILD
-   echo "Package Name : $pkgname"
-   echo "Package Version : $pkgver"
-   echo "Package Size : $(curl -s -L -I $source | gawk -v IGNORECASE=1 '/^Content-Length/ { printf "%.2f MB\n", $2/1024/1024 }')"
-   echo "Arrow ready for installation."
-   echo -n "Are you sure ? [Y\n] : "
-   read are_you_sure
+_exit() {
+  echo "$1"
+  exit "${2:-1}"
+}
 
-   if [ "$are_you_sure" = "Y" ] || [ "$are_you_sure" = "y" ] || [ "$are_you_sure" = "yes" ]; then
-     echo "LETS DO IT!"
+case "$1" in
+  install)
+    path_of_arwbuild="$(find ~/.arrow/repos -type d -name "$2")"    
+    if [ -z "$path_of_arwbuild" ]; then
+      _exit "Error: Repository '$2' not found."
+    fi
 
-     curl -L# $source > ~/.arrow/source/$(basename "$source")
+    source "$path_of_arwbuild/ARWBUILD" || _exit "Error: Failed to source ARWBUILD file."
+    
+    package_size=$(curl -s -L -I "$source" | awk -F': ' '/^Content-Length/ { printf "%.2f MB\n", $2/1024/1024 }')
+    if [ -z "$package_size" ]; then
+      _exit "Error: Unable to retrieve package size."
+    fi
 
-     if type prepare >/dev/null 2>&1 ; then prepare ; fi
-     if type build >/dev/null 2>&1 ; then build ; fi
-     if type package >/dev/null 2>&1 ; then package ; fi
-     if type check >/dev/null 2>&1 ; then check ; fi
-     echo -ne '\n'
-     echo "Installation finished."
-   else
-     echo "OK!"
-   fi
-fi
+    echo -e "Package Name : $pkgname\nPackage Version : $pkgver\nPackage Size : $package_size\nArrow is ready for installation."
+    
+    read -p "Are you sure you want to proceed with the installation? [Y/n]: " are_you_sure
+    if [[ "$are_you_sure" =~ ^[Yy]|yes$ ]]; then
+      echo "Starting installation..."
+      curl -L# "$source" -o "~/.arrow/source/$(basename "$source")" || _exit "Error: Failed to download package."
 
-if [ "$1" = "remove" ]; then
-  find "source" -type f -name "$2-*.*" -exec rm -r {} + &> /dev/null
-  find "packages" -type d -name "$2-*.*" -exec rm -r {} + &> /dev/null
-  find "bin" -type f -name "$2-*.*" -exec rm -r {} + &> /dev/null
-  echo "Removed the package : $2"
-fi
-
-if [ "$1" = "addrepo" ]; then
-   echo "Searching $2 with $3 name repo..."
-   mkdir ~/.arrow/repos/$3 &> /dev/null
-   git clone $2 ~/.arrow/repos/$3 &> /dev/null
-   echo "Finished repo add."
-fi
-
-if [ "$1" = "rmrepo" ]; then
- find ~/.arrow/repos/ -type d -name "$2" -exec rm -rf {} +
- echo "Removed repo."
-fi
+      for func in prepare build package check; do
+        if type "$func" &>/dev/null; then 
+          $func || _exit "Error: '$func' function failed."
+        fi
+      done
+      
+      echo -e '\nInstallation completed successfully.'
+    else
+      echo "Installation canceled."
+    fi
+  ;;
+  
+  remove)
+    for dir in source packages bin; do
+      find "$dir" -type f -name "$2-*.*" -exec rm -r {} + &>/dev/null
+    done
+    echo "Successfully removed the package: $2"
+  ;;
+  
+  repo)
+    case "$2" in
+      add)
+        echo "Adding repository: $3..."
+        mkdir -p ~/.arrow/repos/"$3" &>/dev/null
+        git clone "$2" ~/.arrow/repos/"$3" &>/dev/null || _exit "Error: Failed to clone repository."
+        echo "Repository added successfully."
+      ;;
+      remove)
+        find ~/.arrow/repos/ -type d -name "$2" -exec rm -rf {} +
+        echo "Repository removed successfully."
+      ;;
+    esac
+  ;;
+esac
