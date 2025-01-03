@@ -13,7 +13,7 @@ if [ "$1" = "install" ]; then
    if [ "$are_you_sure" = "Y" ] || [ "$are_you_sure" = "y" ] || [ "$are_you_sure" = "yes" ]; then
      echo "LETS DO IT!"
 
-     curl -L $source > ~/.arrow/source/$(basename "$source")
+     curl -L# $source > ~/.arrow/source/$(basename "$source")
 
      if type prepare >/dev/null 2>&1 ; then prepare ; fi
      if type build >/dev/null 2>&1 ; then build ; fi
