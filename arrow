@@ -1,4 +1,4 @@
- #bin/bash
+#!/usr/bin/env bash
 
 if [ "$1" = "install" ]; then
    path_of_arwbuild="$(find ~/.arrow/repos -type d -name '*txt*')"
