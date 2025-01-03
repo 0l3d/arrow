@@ -50,6 +50,21 @@ case "$1" in
     echo "Successfully removed the package: $2"
   ;;
   
+  list)
+    echo "Available packages:"
+    ls $REPOS/* | awk -F'/' '{print $NF}' | sort
+  ;;
+  
+  update)
+    echo "Updating repositories..."
+    for repo in $REPOS/*; do
+      if [ -d "$repo/.git" ]; then
+        (cd "$repo" && git pull) || _exit "Error: Failed to update repository '$repo'."
+      fi
+    done
+    echo "All repositories updated successfully."
+  ;;
+  
   repo)
     case "$2" in
       add)
