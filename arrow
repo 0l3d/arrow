@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-CACHE="$HOME/.arrow/.cache"
+ARROW_HOME="$HOME/.arrow"
+
+CACHE="$ARROW_HOME/.cache"
+REPOS="$ARROW_HOME/repos"
 
 _exit() {
   echo "$1"
@@ -9,7 +12,7 @@ _exit() {
 
 case "$1" in
   install)
-    path_of_arwbuild="$(find ~/.arrow/repos -type d -name "$2")"    
+    path_of_arwbuild="$(find $REPOS -type d -name "$2")"    
     if [ -z "$path_of_arwbuild" ]; then
       _exit "Error: Repository '$2' not found."
     fi
@@ -42,7 +45,7 @@ case "$1" in
   
   remove)
     for dir in source packages bin; do
-      find "$dir" -type f -name "$2-*.*" -exec rm -f {} + &>/dev/null
+      find $dir -type f -name "$2-*.*" -exec rm -f {} + &>/dev/null
     done
     echo "Successfully removed the package: $2"
   ;;
@@ -51,12 +54,12 @@ case "$1" in
     case "$2" in
       add)
         echo "Adding repository: $3..."
-        mkdir -p ~/.arrow/repos/"$3" &>/dev/null
-        git clone "$4" ~/.arrow/repos/"$3" &>/dev/null || _exit "Error: Failed to clone repository."
+        mkdir -p $REPOS/$3 &>/dev/null
+        git clone $4 $REPOS/$3 &>/dev/null || _exit "Error: Failed to clone repository."
         echo "Repository added successfully."
       ;;
       remove)
-        find ~/.arrow/repos/ -type d -name "$3" -exec rm -rf {} +
+        find $REPOS/ -type d -name $3 -exec rm -rf {} +
         echo "Repository removed successfully."
       ;;
     esac
